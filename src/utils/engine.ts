@@ -90,7 +90,7 @@ const kingEndgameTable = [
 ];
 
 // Evaluate position from white's perspective
-const evaluateBoard = (game: Chess): number => {
+export const evaluateBoard = (game: Chess): number => {
   if (game.isCheckmate()) {
     return game.turn() === 'w' ? -Infinity : Infinity;
   }
@@ -216,7 +216,7 @@ export const calculateBestMove = async (fen: string, difficulty: Difficulty): Pr
   let bestEval = game.turn() === 'w' ? -Infinity : Infinity;
   const isMaximizing = game.turn() === 'w';
 
-
+  // Evaluate each move
   for (const move of moves) {
     game.move(move);
     const evaluation = minimax(
@@ -235,11 +235,11 @@ export const calculateBestMove = async (fen: string, difficulty: Difficulty): Pr
     }
   }
 
-// random move for easy
+  // random move for easy
   if (difficulty === 'easy' && Math.random() < 0.3) {
     const randomIndex = Math.floor(Math.random() * moves.length);
     bestMove = moves[randomIndex];
   }
 
-  return bestMove ? `${bestMove.from}${bestMove.to}` : '';
+  return bestMove ? `${bestMove.from}${bestMove.to}${bestMove.promotion || ''}` : '';
 };

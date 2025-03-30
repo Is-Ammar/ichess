@@ -1,40 +1,34 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback } from 'react';
 import { Chessboard as ReactChessboard } from 'react-chessboard';
 import { useGameStore } from '../store/gameStore';
 import { calculateBestMove } from '../utils/engine';
+import { Square, Move } from 'chess.js';
 
 export const Chessboard: React.FC = () => {
   const { game, mode, difficulty, theme, isThinking, makeMove, setThinking } = useGameStore();
 
   const onDrop = useCallback(
-    (sourceSquare: string, targetSquare: string) => {
+    (sourceSquare: Square, targetSquare: Square) => {
       try {
-        // Get all legal moves for the piece at sourceSquare
-        const legalMoves = game.moves({ square: sourceSquare, verbose: true });
-        
-        // Check if the attempted move is legal
+        // Get all legal moves for the selected piece
+        const legalMoves = game.moves({ square: sourceSquare, verbose: true }) as Move[];
+
+        // Ensure the move is legal
         const isLegalMove = legalMoves.some(move => move.from === sourceSquare && move.to === targetSquare);
-        
-        if (!isLegalMove) {
-          return false;
-        }
+        if (!isLegalMove) return false;
 
-        const move = game.move({
-          from: sourceSquare,
-          to: targetSquare,
-          promotion: 'q',
-        });
+        // Make the move
+        const move = game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' }); // Promote to queen by default
+        if (!move) return false;
 
-        if (move === null) return false;
-        makeMove(`${sourceSquare}${targetSquare}`);
+        makeMove(`${move.from}${move.to}`);
 
+        // If single-player mode, let the engine play
         if (mode === 'single' && !game.isGameOver()) {
           setThinking(true);
           setTimeout(async () => {
             const bestMove = await calculateBestMove(game.fen(), difficulty);
-            if (bestMove) {
-              makeMove(bestMove);
-            }
+            if (bestMove) makeMove(bestMove);
             setThinking(false);
           }, 300);
         }

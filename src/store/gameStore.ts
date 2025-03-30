@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { Chess } from 'chess.js';
 import { calculateBestMove } from '../utils/engine';
-import { evaluateBoard } from '../utils/engine'; // Import the evaluation function
+import { evaluateBoard } from '../utils/engine';
 import { GameStore, GameMode, Difficulty, GameResult, Theme } from '../types/chess';
 import { persist } from 'zustand/middleware';
 
