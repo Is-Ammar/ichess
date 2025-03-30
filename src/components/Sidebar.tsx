@@ -1,5 +1,5 @@
 import React from 'react';
-import { Moon, Sun, Undo2, RotateCcw, Brain, Users } from 'lucide-react';
+import { Moon, Sun, Undo2, RotateCcw, Brain, Users, Flag, Handshake, CircleUser } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
 import { GameMode, Difficulty, Theme } from '../types/chess';
 
@@ -11,17 +11,44 @@ export const Sidebar: React.FC = () => {
     moveHistory,
     timeWhite,
     timeBlack,
+    gameResult,
+    playerColor,
+    isThinking,
     setMode,
     setDifficulty,
     setTheme,
+    setPlayerColor,
     undoMove,
     resetGame,
+    resign,
+    offerDraw
   } = useGameStore();
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Format result message
+  const getResultMessage = () => {
+    if (!gameResult) return null;
+    
+    const winner = gameResult.winner === 'w' ? 'White' : gameResult.winner === 'b' ? 'Black' : 'Nobody';
+    let reason = '';
+    
+    switch (gameResult.reason) {
+      case 'checkmate': reason = 'by checkmate'; break;
+      case 'stalemate': reason = 'by stalemate'; break;
+      case 'repetition': reason = 'by threefold repetition'; break;
+      case 'insufficient': reason = 'by insufficient material'; break;
+      case 'fifty-move': reason = 'by fifty-move rule'; break;
+      case 'agreement': reason = 'by agreement'; break;
+      case 'resignation': reason = 'by resignation'; break;
+      case 'timeout': reason = 'by timeout'; break;
+    }
+    
+    return `${winner} wins ${reason}`;
   };
 
   return (
@@ -60,22 +87,46 @@ export const Sidebar: React.FC = () => {
         </div>
 
         {mode === 'single' && (
-          <div>
-            <h3 className="text-lg font-semibold mb-2">Difficulty</h3>
-            <div className="flex gap-2">
-              {(['easy', 'medium', 'hard'] as Difficulty[]).map((level) => (
+          <>
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Difficulty</h3>
+              <div className="flex gap-2">
+                {(['easy', 'medium', 'hard'] as Difficulty[]).map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setDifficulty(level)}
+                    className={`px-4 py-2 rounded capitalize ${
+                      difficulty === level ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700'
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-2">Play As</h3>
+              <div className="flex gap-2">
                 <button
-                  key={level}
-                  onClick={() => setDifficulty(level)}
-                  className={`px-4 py-2 rounded capitalize ${
-                    difficulty === level ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700'
+                  onClick={() => setPlayerColor('w')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded ${
+                    playerColor === 'w' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700'
                   }`}
                 >
-                  {level}
+                  <CircleUser size={18} className="text-white" /> White
                 </button>
-              ))}
+                <button
+                  onClick={() => setPlayerColor('b')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded ${
+                    playerColor === 'b' ? 'bg-blue-500 text-white' : 'bg-slate-100 dark:bg-slate-700'
+                  }`}
+                >
+                  <CircleUser size={18} className="text-black" /> Black
+                </button>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         <div>
@@ -86,31 +137,74 @@ export const Sidebar: React.FC = () => {
           </div>
         </div>
 
+        {gameResult && (
+          <div className="bg-yellow-100 dark:bg-yellow-900 p-3 rounded-md border border-yellow-300 dark:border-yellow-700">
+            <h3 className="text-lg font-semibold mb-1">Game Result</h3>
+            <p className="font-medium">{getResultMessage()}</p>
+          </div>
+        )}
+
         <div>
           <h3 className="text-lg font-semibold mb-2">Move History</h3>
           <div className="h-40 overflow-y-auto bg-slate-50 dark:bg-slate-700 rounded p-2">
-            {moveHistory.map((move, i) => (
-              <div key={i} className="font-mono">
-                {i + 1}. {move}
+            {moveHistory.length > 0 ? (
+              moveHistory.map((move, i) => (
+                <div key={i} className="font-mono">
+                  {i + 1}. {move}
+                </div>
+              ))
+            ) : (
+              <div className="text-slate-400 dark:text-slate-500 italic text-center pt-2">
+                No moves yet
               </div>
-            ))}
+            )}
           </div>
         </div>
 
         <div className="flex gap-2">
           <button
             onClick={undoMove}
-            className="flex items-center gap-2 px-4 py-2 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
+            disabled={isThinking || moveHistory.length === 0}
+            className={`flex items-center gap-2 px-4 py-2 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 ${
+              (isThinking || moveHistory.length === 0) ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <Undo2 size={18} /> Undo
           </button>
           <button
             onClick={resetGame}
-            className="flex items-center gap-2 px-4 py-2 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600"
+            disabled={isThinking}
+            className={`flex items-center gap-2 px-4 py-2 rounded bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 ${
+              isThinking ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
             <RotateCcw size={18} /> Reset
           </button>
         </div>
+
+        {/* Game actions */}
+        {!gameResult && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => offerDraw()}
+              disabled={isThinking}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-100 dark:hover:bg-amber-800 ${
+                isThinking ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              <Handshake size={18} /> Offer Draw
+            </button>
+            <button
+              onClick={() => resign(playerColor)}
+              disabled={isThinking}
+              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800 ${
+                isThinking ? 'opacity-50 cursor-not-allowed' : ''
+              }`}
+            >
+              <Flag size={18} /> Resign
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

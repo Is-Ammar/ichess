@@ -42,6 +42,24 @@ export const Chessboard: React.FC = () => {
     [game, mode, difficulty, makeMove, setThinking]
   );
 
+  // Determine game end state
+  const isGameOver = game.isGameOver();
+  const isCheckmate = game.isCheckmate();
+  const isStalemate = game.isStalemate();
+  const isDraw = game.isDraw() && !isStalemate;
+
+  // Get the message to display based on game state
+  const getGameEndMessage = () => {
+    if (isCheckmate) {
+      return `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins`;
+    } else if (isStalemate) {
+      return 'Stalemate - Game drawn';
+    } else if (isDraw) {
+      return 'Draw';
+    }
+    return '';
+  };
+
   return (
     <div className="w-[600px] h-[600px] relative">
       <ReactChessboard
@@ -57,6 +75,26 @@ export const Chessboard: React.FC = () => {
       {isThinking && (
         <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
           <div className="text-white text-xl font-semibold">Thinking...</div>
+        </div>
+      )}
+      {isGameOver && (
+        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg text-center max-w-xs">
+            <h3 className={`text-2xl font-bold mb-2 ${isCheckmate ? 'text-red-600 dark:text-red-400' : 'text-blue-600 dark:text-blue-400'}`}>
+              {getGameEndMessage()}
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 mb-4">
+              {isCheckmate ? 'The king is in check and has no legal moves.' : 
+               isStalemate ? 'No legal moves available, but the king is not in check.' : 
+               'Game ended in a draw.'}
+            </p>
+            <button 
+              className="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors"
+              onClick={() => window.location.reload()}
+            >
+              New Game
+            </button>
+          </div>
         </div>
       )}
     </div>
