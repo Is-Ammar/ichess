@@ -1,7 +1,7 @@
 import React from 'react';
 import { Moon, Sun, Undo2, RotateCcw, Brain, Users, Flag, Handshake, CircleUser } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
-import { GameMode, Difficulty, Theme, GameResult } from '../types/chess';
+import {  Difficulty, } from '../types/chess';
 
 export const Sidebar: React.FC = () => {
   const {

@@ -4,9 +4,8 @@ import { calculateBestMove, evaluateBoard } from '../utils/engine';
 import { GameStore, GameMode, Difficulty, GameResult, Theme } from '../types/chess';
 import { persist } from 'zustand/middleware';
 
-const INITIAL_TIME = 600; // 10 minutes in seconds
+const INITIAL_TIME = 600;
 
-// Helper function to create a new game instance
 const createNewGame = () => new Chess();
 
 export const useGameStore = create<GameStore>()(
@@ -182,15 +181,14 @@ export const useGameStore = create<GameStore>()(
           ...currentState,
           ...(typeof persistedState === 'object' && persistedState !== null ? persistedState : {}),
           game,
-          isThinking: false, // Reset thinking state on load
-          gameResult: null   // Reset game result on load
+          isThinking: false,
+          gameResult: null 
         };
       }
     }
   )
 );
 
-// Helper function to determine the game result
 const determineGameResult = (game: Chess): GameResult => {
   if (game.isCheckmate()) {
     return {
@@ -216,9 +214,7 @@ const determineGameResult = (game: Chess): GameResult => {
   return { winner: null, reason: 'stalemate' }; // Default to a valid reason
 };
 
-// Helper function to calculate probability of accepting a draw offer
 const calculateDrawAcceptProbability = (evaluation: number, difficulty: Difficulty): number => {
-  // Convert evaluation to absolute value (perspective doesn't matter for draw acceptance)
   const absEval = Math.abs(evaluation);
   
   // Base probability depends on how even the position is

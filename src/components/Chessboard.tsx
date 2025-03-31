@@ -3,7 +3,6 @@ import { Chessboard as ReactChessboard } from 'react-chessboard';
 import { useGameStore } from '../store/gameStore';
 import { calculateBestMove } from '../utils/engine';
 import { Square, Move } from 'chess.js';
-import { GameResult } from '../types/chess';
 
 export const Chessboard: React.FC = () => {
   const { 
@@ -14,7 +13,8 @@ export const Chessboard: React.FC = () => {
     isThinking, 
     makeMove, 
     setThinking,
-    gameResult
+    gameResult,
+    playerColor
   } = useGameStore();
 
   const onDrop = useCallback(
@@ -77,11 +77,17 @@ export const Chessboard: React.FC = () => {
     return '';
   };
 
+  // Determine board orientation based on player color in single player mode
+  const boardOrientation = mode === 'single' ? 
+    (playerColor === 'w' ? 'white' : 'black') : 
+    'white';
+
   return (
     <div className="w-[600px] h-[600px] relative">
       <ReactChessboard
         position={game.fen()}
         onPieceDrop={onDrop}
+        boardOrientation={boardOrientation}
         customBoardStyle={{
           borderRadius: '4px',
           boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',

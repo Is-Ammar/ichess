@@ -1,6 +1,17 @@
 import { Chess } from 'chess.js';
 import { Difficulty } from '../types/chess';
 
+const openingBook: Record<string, string[]> = {
+  // Standard openings
+  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -': ['e2e4', 'd2d4', 'c2c4', 'g1f3'],
+  'rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq -': ['e7e5', 'c7c5', 'e7e6', 'g8f6'],
+  'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq -': ['d7d5', 'g8f6', 'e7e6', 'c7c5'],
+  'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -': ['e7e5', 'c7c5', 'e7e6', 'c7c6'],
+  'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['g1f3', 'b1c3', 'f2f4', 'd2d4'],
+  'rnbqkbnr/ppp1pppp/8/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['e4d5', 'e4e5', 'd2d4', 'g1f3'],
+  'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['g1f3', 'f1c4', 'f2f4', 'd2d4'],
+  // Add more positions as needed
+};
 // Piece values for material evaluation
 const pieceValues = {
   p: 100,
@@ -193,14 +204,35 @@ export const calculateBestMove = async (fen: string, difficulty: Difficulty): Pr
     return '';
   }
 
+  // First check if current position is in opening book
+  const fenBase = fen.split(' ')[0]; // Get just the position part of FEN
+  if (openingBook[fenBase]) {
+    const bookMoves = openingBook[fenBase];
+    const legalBookMoves = bookMoves.filter(move => 
+      moves.some(m => m.from === move.substring(0, 2) && m.to === move.substring(2, 4))
+    );
+    
+    // If we have book moves available, use them with high probability
+    if (legalBookMoves.length > 0) {
+      const useBookMove = Math.random() > 0.2; // 80% chance to use book move
+      if (useBookMove || difficulty === 'easy') {
+        const randomBookMove = legalBookMoves[
+          Math.floor(Math.random() * legalBookMoves.length)
+        ];
+        return randomBookMove;
+      }
+    }
+  }
 
+  // Set search depth based on difficulty
   const searchDepth = 
     difficulty === 'easy' ? 2 : 
     difficulty === 'medium' ? 3 : 4;
 
+  // Simulate "thinking" based on difficulty
   const delay = difficulty === 'easy' ? 500 : 
                difficulty === 'medium' ? 700 : 
-               700;
+               1000;
   await new Promise(resolve => setTimeout(resolve, delay));
 
   let bestMove = null;
