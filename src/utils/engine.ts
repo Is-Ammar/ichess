@@ -230,9 +230,9 @@ export const calculateBestMove = async (fen: string, difficulty: Difficulty): Pr
     difficulty === 'medium' ? 3 : 4;
 
   // Simulate "thinking" based on difficulty
-  const delay = difficulty === 'easy' ? 500 : 
-               difficulty === 'medium' ? 700 : 
-               1000;
+  const delay = difficulty === 'easy' ? 10 : 
+               difficulty === 'medium' ? 10 : 
+               10;
   await new Promise(resolve => setTimeout(resolve, delay));
 
   let bestMove = null;
