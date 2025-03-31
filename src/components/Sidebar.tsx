@@ -1,10 +1,11 @@
 import React from 'react';
 import { Moon, Sun, Undo2, RotateCcw, Brain, Users, Flag, Handshake, CircleUser } from 'lucide-react';
 import { useGameStore } from '../store/gameStore';
-import { GameMode, Difficulty, Theme } from '../types/chess';
+import { GameMode, Difficulty, Theme, GameResult } from '../types/chess';
 
 export const Sidebar: React.FC = () => {
   const {
+    game,
     mode,
     difficulty,
     theme,
@@ -30,7 +31,6 @@ export const Sidebar: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Format result message
   const getResultMessage = () => {
     if (!gameResult) return null;
     
@@ -182,11 +182,10 @@ export const Sidebar: React.FC = () => {
           </button>
         </div>
 
-        {/* Game actions */}
         {!gameResult && (
           <div className="flex gap-2">
             <button
-              onClick={() => offerDraw()}
+              onClick={offerDraw}
               disabled={isThinking}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-100 dark:hover:bg-amber-800 ${
                 isThinking ? 'opacity-50 cursor-not-allowed' : ''
@@ -195,7 +194,7 @@ export const Sidebar: React.FC = () => {
               <Handshake size={18} /> Offer Draw
             </button>
             <button
-              onClick={() => resign(playerColor)}
+              onClick={() => resign(game.turn())}
               disabled={isThinking}
               className={`flex-1 flex items-center justify-center gap-2 py-2 rounded bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100 dark:hover:bg-red-800 ${
                 isThinking ? 'opacity-50 cursor-not-allowed' : ''

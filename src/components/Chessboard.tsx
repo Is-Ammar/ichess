@@ -3,13 +3,26 @@ import { Chessboard as ReactChessboard } from 'react-chessboard';
 import { useGameStore } from '../store/gameStore';
 import { calculateBestMove } from '../utils/engine';
 import { Square, Move } from 'chess.js';
+import { GameResult } from '../types/chess';
 
 export const Chessboard: React.FC = () => {
-  const { game, mode, difficulty, theme, isThinking, makeMove, setThinking } = useGameStore();
+  const { 
+    game, 
+    mode, 
+    difficulty, 
+    theme, 
+    isThinking, 
+    makeMove, 
+    setThinking,
+    gameResult
+  } = useGameStore();
 
   const onDrop = useCallback(
     (sourceSquare: Square, targetSquare: Square) => {
       try {
+        // Don't allow moves when game is over
+        if (gameResult) return false;
+
         // Get all legal moves for the selected piece
         const legalMoves = game.moves({ square: sourceSquare, verbose: true }) as Move[];
 
@@ -18,7 +31,7 @@ export const Chessboard: React.FC = () => {
         if (!isLegalMove) return false;
 
         // Make the move
-        const move = game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' }); // Promote to queen by default
+        const move = game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
         if (!move) return false;
 
         makeMove(`${move.from}${move.to}`);
@@ -39,17 +52,21 @@ export const Chessboard: React.FC = () => {
         return false;
       }
     },
-    [game, mode, difficulty, makeMove, setThinking]
+    [game, mode, difficulty, makeMove, setThinking, gameResult]
   );
 
   // Determine game end state
-  const isGameOver = game.isGameOver();
+  const isGameOver = game.isGameOver() || !!gameResult;
   const isCheckmate = game.isCheckmate();
   const isStalemate = game.isStalemate();
   const isDraw = game.isDraw() && !isStalemate;
 
   // Get the message to display based on game state
   const getGameEndMessage = () => {
+    if (gameResult) {
+      const winner = gameResult.winner === 'w' ? 'White' : gameResult.winner === 'b' ? 'Black' : 'Nobody';
+      return `${winner} wins by ${gameResult.reason}`;
+    }
     if (isCheckmate) {
       return `Checkmate! ${game.turn() === 'w' ? 'Black' : 'White'} wins`;
     } else if (isStalemate) {

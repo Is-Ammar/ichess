@@ -106,10 +106,10 @@ export const evaluateBoard = (game: Chess): number => {
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const piece = board[i][j];
-      if (piece === null) continue;
+      if (!piece) continue;
       
       // Material score
-      const materialValue = pieceValues[piece.type] || 0;
+      const materialValue = pieceValues[piece.type];
       
       // Position score
       let positionValue = 0;
@@ -124,19 +124,15 @@ export const evaluateBoard = (game: Chess): number => {
         case 'q': positionValue = queenTable[reverseIndex]; break;
         case 'k': {
           // Use midgame or endgame king table depending on queen presence
-          const isEndgame = !board.flat().some(p => p?.type === 'q');
-          positionValue = isEndgame ? kingEndgameTable[reverseIndex] : kingMidgameTable[reverseIndex];
+          const hasQueens = board.flat().some(p => p?.type === 'q');
+          positionValue = hasQueens ? kingMidgameTable[reverseIndex] : kingEndgameTable[reverseIndex];
           break;
         }
       }
       
       // Add or subtract based on piece color
       const value = materialValue + positionValue;
-      if (piece.color === 'w') {
-        score += value;
-      } else {
-        score -= value;
-      }
+      score += piece.color === 'w' ? value : -value;
     }
   }
   
@@ -158,19 +154,11 @@ const minimax = (
   const moves = game.moves({ verbose: true });
   
   // Sort moves for better alpha-beta pruning
-  if (isMaximizingPlayer) {
-    moves.sort((a, b) => {
-      const pieceValueA = pieceValues[a.captured || 'p'] || 0;
-      const pieceValueB = pieceValues[b.captured || 'p'] || 0;
-      return pieceValueB - pieceValueA;
-    });
-  } else {
-    moves.sort((a, b) => {
-      const pieceValueA = pieceValues[a.captured || 'p'] || 0;
-      const pieceValueB = pieceValues[b.captured || 'p'] || 0;
-      return pieceValueA - pieceValueB;
-    });
-  }
+  moves.sort((a, b) => {
+    const pieceValueA = pieceValues[a.captured || 'p'] || 0;
+    const pieceValueB = pieceValues[b.captured || 'p'] || 0;
+    return isMaximizingPlayer ? pieceValueB - pieceValueA : pieceValueA - pieceValueB;
+  });
 
   if (isMaximizingPlayer) {
     let maxEval = -Infinity;
@@ -201,15 +189,18 @@ export const calculateBestMove = async (fen: string, difficulty: Difficulty): Pr
   const game = new Chess(fen);
   const moves = game.moves({ verbose: true });
   
-  if (moves.length === 0) return '';
+  if (moves.length === 0 || game.isGameOver()) {
+    return '';
+  }
 
-  // Set search depth based on difficulty
+
   const searchDepth = 
     difficulty === 'easy' ? 2 : 
     difficulty === 'medium' ? 3 : 4;
 
-  // Simulate "thinking" based on difficulty
-  const delay = difficulty === 'easy' ? 500 : difficulty === 'medium' ? 1000 : 2000;
+  const delay = difficulty === 'easy' ? 500 : 
+               difficulty === 'medium' ? 700 : 
+               700;
   await new Promise(resolve => setTimeout(resolve, delay));
 
   let bestMove = null;
@@ -235,10 +226,15 @@ export const calculateBestMove = async (fen: string, difficulty: Difficulty): Pr
     }
   }
 
-  // random move for easy
+  // Random move for easy difficulty (30% chance)
   if (difficulty === 'easy' && Math.random() < 0.3) {
     const randomIndex = Math.floor(Math.random() * moves.length);
     bestMove = moves[randomIndex];
+  }
+
+  // Fallback to random move if no best move found
+  if (!bestMove) {
+    bestMove = moves[Math.floor(Math.random() * moves.length)];
   }
 
   return bestMove ? `${bestMove.from}${bestMove.to}${bestMove.promotion || ''}` : '';
