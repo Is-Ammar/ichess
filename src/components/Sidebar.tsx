@@ -10,8 +10,6 @@ export const Sidebar: React.FC = () => {
     difficulty,
     theme,
     moveHistory,
-    timeWhite,
-    timeBlack,
     gameResult,
     playerColor,
     isThinking,
@@ -24,13 +22,11 @@ export const Sidebar: React.FC = () => {
     resign,
     offerDraw
   } = useGameStore();
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
   };
-
   const getResultMessage = () => {
     if (!gameResult) return null;
     
@@ -91,7 +87,7 @@ export const Sidebar: React.FC = () => {
             <div>
               <h3 className="text-lg font-semibold mb-2">Difficulty</h3>
               <div className="flex gap-2">
-                {(['easy', 'medium', 'hard'] as Difficulty[]).map((level) => (
+                {(['easy', 'medium'] as Difficulty[]).map((level) => (
                   <button
                     key={level}
                     onClick={() => setDifficulty(level)}
@@ -132,8 +128,8 @@ export const Sidebar: React.FC = () => {
         <div>
           <h3 className="text-lg font-semibold mb-2">Time</h3>
           <div className="flex justify-between text-xl font-mono">
-            <div>⚪ {formatTime(timeWhite)}</div>
-            <div>⚫ {formatTime(timeBlack)}</div>
+            <div>⚪ {formatTime(600)}</div>
+            <div>⚫ {formatTime(600)}</div>
           </div>
         </div>
 

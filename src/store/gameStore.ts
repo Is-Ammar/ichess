@@ -59,8 +59,6 @@ export const useGameStore = create<GameStore>()(
             set({ gameResult });
             return;
           }
-
-          // Handle computer move in single player mode
           if (mode === 'single' && newGame.turn() !== playerColor) {
             await get().makeComputerMove();
           }
@@ -211,7 +209,7 @@ const determineGameResult = (game: Chess): GameResult => {
     return { winner: null, reason };
   }
   
-  return { winner: null, reason: 'stalemate' }; // Default to a valid reason
+  return { winner: null, reason: 'stalemate' };
 };
 
 const calculateDrawAcceptProbability = (evaluation: number, difficulty: Difficulty): number => {
@@ -226,8 +224,6 @@ const calculateDrawAcceptProbability = (evaluation: number, difficulty: Difficul
       return Math.min(1, baseProbability + 0.3);
     case 'medium':
       return baseProbability;
-    case 'hard':
-      return Math.max(0, baseProbability - 0.3);
     default:
       return baseProbability;
   }
