@@ -4,7 +4,6 @@ import { useGameStore } from '../store/gameStore';
 import { calculateBestMove } from '../utils/engine';
 import { Square, Move } from 'chess.js';
 
-// Helper function to get piece icon
 const getPieceIcon = (piece: string) => {
   const pieceMap: Record<string, string> = {
     'p': '♟︎',
@@ -36,17 +35,15 @@ export const Chessboard: React.FC = () => {
     playerColor
   } = useGameStore();
 
-  // Function to get captured pieces
+  
   const getCapturedPieces = useCallback(() => {
     const capturedPieces: { white: string[], black: string[] } = { white: [], black: [] };
-    
-    // Calculate initial pieces counts
+  
     const initialPieces = {
       white: { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 },
       black: { p: 8, n: 2, b: 2, r: 2, q: 1, k: 1 }
     };
 
-    // Count current pieces on board
     const currentPieces: Record<string, number> = {};
     for (let i = 0; i < 8; i++) {
       for (let j = 0; j < 8; j++) {
@@ -59,7 +56,6 @@ export const Chessboard: React.FC = () => {
       }
     }
 
-    // Calculate captured pieces by comparing initial with current
     (['white', 'black'] as const).forEach(color => {
       (['p', 'n', 'b', 'r', 'q', 'k'] as const).forEach(type => {
         const colorPrefix = color === 'white' ? 'w' : 'b';
@@ -85,23 +81,19 @@ export const Chessboard: React.FC = () => {
   const onDrop = useCallback(
     (sourceSquare: Square, targetSquare: Square) => {
       try {
-        // Don't allow moves when game is over
+
         if (gameResult) return false;
 
-        // Get all legal moves for the selected piece
         const legalMoves = game.moves({ square: sourceSquare, verbose: true }) as Move[];
 
-        // Ensure the move is legal
         const isLegalMove = legalMoves.some(move => move.from === sourceSquare && move.to === targetSquare);
         if (!isLegalMove) return false;
 
-        // Make the move
         const move = game.move({ from: sourceSquare, to: targetSquare, promotion: 'q' });
         if (!move) return false;
 
         makeMove(`${move.from}${move.to}`);
 
-        // If single-player mode, let the engine play
         if (mode === 'single' && !game.isGameOver()) {
           setThinking(true);
           setTimeout(async () => {
@@ -120,13 +112,11 @@ export const Chessboard: React.FC = () => {
     [game, mode, difficulty, makeMove, setThinking, gameResult]
   );
 
-  // Determine game end state
   const isGameOver = game.isGameOver() || !!gameResult;
   const isCheckmate = game.isCheckmate();
   const isStalemate = game.isStalemate();
   const isDraw = game.isDraw() && !isStalemate;
 
-  // Get the message to display based on game state
   const getGameEndMessage = () => {
     if (gameResult) {
       const winner = gameResult.winner === 'w' ? 'White' : gameResult.winner === 'b' ? 'Black' : 'Nobody';
@@ -142,14 +132,12 @@ export const Chessboard: React.FC = () => {
     return '';
   };
 
-  // Determine board orientation based on player color in single player mode
   const boardOrientation = mode === 'single' ? 
     (playerColor === 'w' ? 'white' : 'black') : 
     'white';
 
   return (
     <div className="flex flex-col">
-      {/* Captured pieces by black (displayed above board) */}
       <div className="flex flex-wrap justify-center items-center bg-slate-200 dark:bg-slate-700 p-2 mb-2 rounded min-h-[40px]">
         {capturedPieces.black.map((piece, index) => (
           <span key={`white-captured-${index}`} className="text-2xl mx-0.5">
@@ -197,7 +185,6 @@ export const Chessboard: React.FC = () => {
         )}
       </div>
 
-      {/* Captured pieces by white (displayed below board) */}
       <div className="flex flex-wrap justify-center items-center bg-slate-200 dark:bg-slate-700 p-2 mt-2 rounded min-h-[40px]">
         {capturedPieces.white.map((piece, index) => (
           <span key={`black-captured-${index}`} className="text-2xl mx-0.5">
