@@ -6,11 +6,10 @@ const pieceValues = {
   n: 320,
   b: 330,
   r: 500,
-  q: 950,  // Slightly higher than standard for more aggressive play
+  q: 950,
   k: 20000,
 };
 
-// More sophisticated piece-square tables with separate middlegame/endgame values
 const pst: Record<string, { mg: number[], eg: number[] }> = {
   p: {
     mg: [
