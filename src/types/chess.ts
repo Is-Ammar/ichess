@@ -1,7 +1,7 @@
 import { Chess } from 'chess.js';
 
 export type GameMode = 'single' | 'multi';
-export type Difficulty = 'easy' | 'medium' | 'hard';
+export type Difficulty = 'easy' | 'medium';
 export type Theme = 'light' | 'dark';
 
 export interface GameResult {

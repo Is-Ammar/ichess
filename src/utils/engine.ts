@@ -3,58 +3,172 @@ import { Difficulty } from '../types/chess';
 
 const pieceValues = {
   p: 100,
-  n: 280,
-  b: 320,
-  r: 479,
-  q: 929,
-  k: 60000,
+  n: 320,
+  b: 330,
+  r: 500,
+  q: 950,  // Slightly higher than standard for more aggressive play
+  k: 20000,
 };
 
-const pst: Record<string, number[]> = {
-  p: [
-    0, 0, 0, 0, 0, 0, 0, 0, 78, 83, 86, 73, 102, 82, 85, 90, 7, 29, 21, 44, 40, 31, 44, 7, -17, 16, -2, 15, 14, 0, 15, -13, -26, 3, 10, 9, 6, 1, 0, -23, -22, 9, 5, -11, -10, -2, 3, -19, -31, 8, -7, -37, -36, -14, 3, -31, 0, 0, 0, 0, 0, 0, 0, 0
-  ],
-  n: [
-    -66, -53, -75, -75, -10, -55, -58, -70, -3, -6, 100, -36, 4, 62, -4, -14, 10, 67, 1, 74, 73, 27, 62, -2, 24, 24, 45, 37, 33, 41, 25, 17, -1, 5, 31, 21, 22, 35, 2, 0, -18, 10, 13, 22, 18, 15, 11, -14, -23, -15, 2, 0, 2, 0, -23, -20, -74, -23, -26, -24, -19, -35, -22, -69
-  ],
-  b: [
-    -59, -78, -82, -76, -23, -107, -37, -50, -11, 20, 35, -42, -39, 31, 2, -22, -9, 39, -32, 41, 52, -10, 28, -14, 25, 17, 20, 34, 26, 25, 15, 10, 13, 10, 17, 23, 17, 16, 0, 7, 14, 25, 24, 15, 8, 25, 20, 15, 19, 20, 11, 6, 7, 6, 20, 16, -7, 2, -15, -12, -14, -15, -10, -10
-  ],
-  r: [
-    35, 29, 33, 4, 37, 33, 56, 50, 55, 29, 56, 67, 55, 62, 34, 60, 19, 35, 28, 33, 45, 27, 25, 15, 0, 5, 16, 13, 18, -4, -9, -6, -28, -35, -16, -21, -13, -29, -46, -30, -42, -28, -42, -25, -25, -35, -26, -46, -53, -38, -31, -26, -29, -43, -44, -53, -30, -24, -18, 5, -2, -18, -31, -32
-  ],
-  q: [
-    6, 1, -8, -104, 69, 24, 88, 26, 14, 32, 60, -10, 20, 76, 57, 24, -2, 43, 32, 60, 72, 63, 43, 2, 1, -16, 22, 17, 25, 20, -13, -6, -14, -15, -2, -5, -1, -10, -20, -22, -30, -6, -13, -11, -16, -11, -16, -27, -36, -18, 0, -19, -15, -15, -21, -38, -39, -30, -31, -13, -31, -36, -34, -42
-  ],
-  k: [
-    4, 54, 47, -99, -99, 60, 83, -62, -32, 10, 55, 56, 56, 55, 10, 3, -62, 12, -57, 44, -67, 28, 37, -31, -55, 50, 11, -4, -19, 13, 0, -49, -55, -43, -52, -28, -51, -47, -8, -50, -47, -42, -43, -79, -64, -32, -29, -32, -4, 3, -14, -50, -57, -18, 13, 4, 17, 30, -3, -14, 6, -1, 40, 18
-  ]
+// More sophisticated piece-square tables with separate middlegame/endgame values
+const pst: Record<string, { mg: number[], eg: number[] }> = {
+  p: {
+    mg: [
+      0, 0, 0, 0, 0, 0, 0, 0,
+      50, 50, 50, 50, 50, 50, 50, 50,
+      10, 10, 20, 30, 30, 20, 10, 10,
+      5, 5, 10, 27, 27, 10, 5, 5,
+      0, 0, 0, 25, 25, 0, 0, 0,
+      5, -5, -10, 0, 0, -10, -5, 5,
+      5, 10, 10, -25, -25, 10, 10, 5,
+      0, 0, 0, 0, 0, 0, 0, 0
+    ],
+    eg: [
+      0, 0, 0, 0, 0, 0, 0, 0,
+      80, 80, 80, 80, 80, 80, 80, 80,
+      50, 50, 50, 50, 50, 50, 50, 50,
+      30, 30, 30, 30, 30, 30, 30, 30,
+      20, 20, 20, 20, 20, 20, 20, 20,
+      10, 10, 10, 10, 10, 10, 10, 10,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0
+    ]
+  },
+  n: {
+    mg: [
+      -50, -40, -30, -30, -30, -30, -40, -50,
+      -40, -20, 0, 5, 5, 0, -20, -40,
+      -30, 5, 10, 15, 15, 10, 5, -30,
+      -30, 0, 15, 20, 20, 15, 0, -30,
+      -30, 5, 15, 20, 20, 15, 5, -30,
+      -30, 0, 10, 15, 15, 10, 0, -30,
+      -40, -20, 0, 0, 0, 0, -20, -40,
+      -50, -40, -30, -30, -30, -30, -40, -50
+    ],
+    eg: [
+      -50, -40, -30, -30, -30, -30, -40, -50,
+      -40, -20, 0, 0, 0, 0, -20, -40,
+      -30, 0, 10, 15, 15, 10, 0, -30,
+      -30, 5, 15, 20, 20, 15, 5, -30,
+      -30, 0, 15, 20, 20, 15, 0, -30,
+      -30, 5, 10, 15, 15, 10, 5, -30,
+      -40, -20, 0, 5, 5, 0, -20, -40,
+      -50, -40, -30, -30, -30, -30, -40, -50
+    ]
+  },
+  b: {
+    mg: [
+      -20, -10, -10, -10, -10, -10, -10, -20,
+      -10, 5, 0, 0, 0, 0, 5, -10,
+      -10, 10, 10, 10, 10, 10, 10, -10,
+      -10, 0, 10, 10, 10, 10, 0, -10,
+      -10, 5, 5, 10, 10, 5, 5, -10,
+      -10, 0, 5, 10, 10, 5, 0, -10,
+      -10, 0, 0, 0, 0, 0, 0, -10,
+      -20, -10, -10, -10, -10, -10, -10, -20
+    ],
+    eg: [
+      -20, -10, -10, -10, -10, -10, -10, -20,
+      -10, 0, 0, 0, 0, 0, 0, -10,
+      -10, 0, 5, 10, 10, 5, 0, -10,
+      -10, 5, 5, 10, 10, 5, 5, -10,
+      -10, 0, 10, 10, 10, 10, 0, -10,
+      -10, 10, 10, 10, 10, 10, 10, -10,
+      -10, 5, 0, 0, 0, 0, 5, -10,
+      -20, -10, -10, -10, -10, -10, -10, -20
+    ]
+  },
+  r: {
+    mg: [
+      0, 0, 0, 5, 5, 0, 0, 0,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      5, 10, 10, 10, 10, 10, 10, 5,
+      0, 0, 0, 0, 0, 0, 0, 0
+    ],
+    eg: [
+      0, 0, 0, 0, 0, 0, 0, 0,
+      5, 10, 10, 10, 10, 10, 10, 5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      -5, 0, 0, 0, 0, 0, 0, -5,
+      0, 0, 0, 5, 5, 0, 0, 0
+    ]
+  },
+  q: {
+    mg: [
+      -20, -10, -10, -5, -5, -10, -10, -20,
+      -10, 0, 5, 0, 0, 0, 0, -10,
+      -10, 5, 5, 5, 5, 5, 0, -10,
+      0, 0, 5, 5, 5, 5, 0, -5,
+      -5, 0, 5, 5, 5, 5, 0, -5,
+      -10, 0, 5, 5, 5, 5, 0, -10,
+      -10, 0, 0, 0, 0, 0, 0, -10,
+      -20, -10, -10, -5, -5, -10, -10, -20
+    ],
+    eg: [
+      -20, -10, -10, -5, -5, -10, -10, -20,
+      -10, 0, 0, 0, 0, 0, 0, -10,
+      -10, 0, 5, 5, 5, 5, 0, -10,
+      -5, 0, 5, 5, 5, 5, 0, -5,
+      0, 0, 5, 5, 5, 5, 0, -5,
+      -10, 5, 5, 5, 5, 5, 0, -10,
+      -10, 0, 5, 0, 0, 0, 0, -10,
+      -20, -10, -10, -5, -5, -10, -10, -20
+    ]
+  },
+  k: {
+    mg: [
+      20, 30, 10, 0, 0, 10, 30, 20,
+      20, 20, 0, 0, 0, 0, 20, 20,
+      -10, -20, -20, -20, -20, -20, -20, -10,
+      -20, -30, -30, -40, -40, -30, -30, -20,
+      -30, -40, -40, -50, -50, -40, -40, -30,
+      -30, -40, -40, -50, -50, -40, -40, -30,
+      -30, -40, -40, -50, -50, -40, -40, -30,
+      -30, -40, -40, -50, -50, -40, -40, -30
+    ],
+    eg: [
+      -50, -40, -30, -20, -20, -30, -40, -50,
+      -30, -20, -10, 0, 0, -10, -20, -30,
+      -30, -10, 20, 30, 30, 20, -10, -30,
+      -30, -10, 30, 40, 40, 30, -10, -30,
+      -30, -10, 30, 40, 40, 30, -10, -30,
+      -30, -10, 20, 30, 30, 20, -10, -30,
+      -30, -30, 0, 0, 0, 0, -30, -30,
+      -50, -30, -30, -30, -30, -30, -30, -50
+    ]
+  }
 };
+
+// Enhanced opening book with more variations
+const openingBook: Record<string, string[]> = {
+  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -': ['e2e4', 'd2d4', 'g1f3', 'c2c4'],
+  'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -': ['e7e5', 'c7c5', 'e7e6', 'c7c6'],
+  'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['g1f3', 'f1c4', 'f2f4'],
+  'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq -': ['b8c6', 'g8f6', 'd7d5'],
+  'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['f1b5', 'd2d4', 'b1c3'],
+  'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq -': ['a7a6', 'g8f6', 'd7d6'],
+  'r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq -': ['b5c6', 'b5a4', 'e1g1'],
+  'r1bqkbnr/1ppp1ppp/p1B5/4p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq -': ['d7c6', 'b7c6'],
+  'rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['d2d4', 'f1c4', 'b1c3'],
+  'rnbqkbnr/ppp2ppp/3p4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq -': ['e5d4', 'g8f6'],
+  'rnbqkb1r/ppp2ppp/3p1n2/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R w KQkq -': ['e4e5', 'b1c3', 'f1d3'],
+  'rnbqkb1r/ppp2ppp/3p1n2/4P3/3P4/5N2/PPP2PPP/RNBQKB1R b KQkq -': ['f6d5', 'f6g4', 'd6e5'],
+  'rnbqkb1r/ppp2ppp/5n2/4p3/3P4/5N2/PPP2PPP/RNBQKB1R w KQkq -': ['c2c4', 'f1e2', 'b1c3'],
+  'rnbqkb1r/ppp2ppp/5n2/4p3/2PP4/5N2/PP3PPP/RNBQKB1R b KQkq -': ['e5d4', 'c7c6', 'b8c6'],
+  'rnbqkb1r/ppp2ppp/8/4p3/2Pn4/5N2/PP3PPP/RNBQKB1R w KQkq -': ['f3d4', 'd1d4', 'b1c3'],
+  'rnbqkb1r/ppp2ppp/8/4N3/2Pn4/8/PP3PPP/RNBQKB1R b KQkq -': ['d8e7', 'd8d5', 'd4c2'],
+  'rnbqkb1r/ppp2ppp/8/4N3/2P5/8/PP3PPP/RNBQKB1R b KQkq -': ['d4c2', 'd4b3'],
+};
+
 
 const MATE_UPPER = pieceValues.k + 10 * pieceValues.q;
-
-const openingBook: Record<string, string[]> = {
-  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -': ['e2e4', 'd2d4', 'g1f3', 'c2c4', 'b2b3', 'g2g3'],
-  'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -': ['e7e5', 'c7c5', 'e7e6', 'c7c6', 'g8f6', 'd7d5'],
-  'rnbqkbnr/pppppppp/8/8/3P4/8/PPP1PPPP/RNBQKBNR b KQkq -': ['g8f6', 'd7d5', 'e7e6', 'c7c5', 'f7f5', 'g7g6'],
-  'rnbqkbnr/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['g1f3', 'f2f4', 'b1c3', 'd2d4'],
-  'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq -': ['b8c6', 'd7d6', 'f7f5'],
-  'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['f1b5', 'f1c4', 'd2d4'],
-  'rnbqkb1r/pppp1ppp/5n2/4p3/4P3/5N2/PPPP1PPP/RNBQKBR1 b KQkq -': ['a7a6', 'd7d6', 'g8f6'],
-  'rnbqkb1r/1ppp1ppp/p4n2/4p3/4P3/5N2/PPPP1PPP/RNBQKBR1 w KQkq -': ['a4a4', 'a4c4'],
-  'rnbqkb1r/1ppp1ppp/p4n2/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq -': ['g8f6', 'b7b5', 'd7d6'],
-  'rnbqkbnr/pp1ppppp/5n2/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['g1f3', 'c2c3', 'b1c3', 'd2d4'],
-  'rnbqkbnr/pp1ppppp/5n2/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq -': ['d7d6', 'b8c6', 'e7e6'],
-  'rnbqkbnr/pp2pppp/5n2/2pp4/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['d2d4'],
-  'rnbqkbnr/pp2pppp/5n2/5N2/4p3/5N2/PPPP1PPP/RNBQKB1R b KQkq -': ['g8f6'],
-  'rnbqkb1r/pp2pppp/5n2/5N2/4p3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['b1c3'],
-  'rnbqkb1r/pp2pppp/5n2/5N2/4p3/2N2N2/PPPP1PPP/RNBQKB1R b KQkq -': ['a7a6', 'e7e6'],
-  'rnbqkbnr/ppp1pppp/5n2/5p2/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq -': ['c2c4', 'g1f3', 'e2e3'],
-  'rnbqkbnr/ppp1pppp/5n2/5p2/2PP4/5N2/PP1P1PPP/RNBQKB1R b KQkq -': ['e7e6', 'd5c4', 'c7c6'],
-  'rnbqkbnr/pp1p1ppp/5n2/4pp2/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['d2d4', 'e4e5', 'b1c3'],
-  'rnbqkbnr/pp1p1ppp/5n2/4pp2/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq -': ['d7d5'],
-  'rnbqkbnr/pp3ppp/5n2/4pp2/3PP3/5N2/PPP2PPP/RNBQKB1R w KQkq -': ['e4e5', 'e4d5', 'b1c3']
-};
 
 export const evaluateBoard = (game: Chess): number => {
   if (game.isCheckmate()) {
@@ -63,19 +177,42 @@ export const evaluateBoard = (game: Chess): number => {
   if (game.isDraw() || game.isStalemate()) {
     return 0;
   }
-  let score = 0;
+  
+  // Determine game phase (simplified approach)
   const board = game.board();
+  let totalPieces = 0;
+  for (let i = 0; i < 8; i++) {
+    for (let j = 0; j < 8; j++) {
+      if (board[i][j]) totalPieces++;
+    }
+  }
+  
+  // Phase calculation (32 pieces at start, fewer than 10 can be considered endgame)
+  // 1.0 = middlegame, 0.0 = endgame
+  const phase = Math.min(1.0, Math.max(0.0, (totalPieces - 10) / 22));
+  
+  let score = 0;
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const piece = board[i][j];
       if (!piece) continue;
+      
       const materialValue = pieceValues[piece.type];
       const squareIndex = (7 - i) * 8 + j;
-      const positionValue = pst[piece.type][squareIndex];
+      
+      // For black pieces, mirror the square index vertically
+      const adjustedSquareIndex = piece.color === 'w' ? squareIndex : 63 - squareIndex;
+      
+      // Blend between middlegame and endgame values based on the phase
+      const positionValue = 
+        phase * pst[piece.type].mg[adjustedSquareIndex] + 
+        (1 - phase) * pst[piece.type].eg[adjustedSquareIndex];
+      
       const value = materialValue + positionValue;
       score += piece.color === 'w' ? value : -value;
     }
   }
+  
   return score;
 };
 
