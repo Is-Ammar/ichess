@@ -22,19 +22,16 @@ export const useGameStore = create<GameStore>()(
       gameResult: null,
       playerColor: 'w',
 
-      // Setters
       setMode: (mode: GameMode) => set({ mode, gameResult: null }),
       setDifficulty: (difficulty: Difficulty) => set({ difficulty }),
       setTheme: (theme: Theme) => set({ theme }),
       setPlayerColor: (color: 'w' | 'b') => set({ playerColor: color }),
-      
-      // Core game actions
+
       makeMove: async (move) => {
         const { game, mode, playerColor, moveHistory } = get();
         const newGame = new Chess(game.fen());
         
         try {
-          // Parse move input
           const moveObj = typeof move === 'string' 
             ? { 
                 from: move.substring(0, 2), 
@@ -46,14 +43,11 @@ export const useGameStore = create<GameStore>()(
           const result = newGame.move(moveObj);
           if (!result) return;
 
-          // Update state
           set({
             game: newGame,
             moveHistory: [...moveHistory, result.san],
             gameResult: null
           });
-
-          // Check game status
           if (newGame.isGameOver()) {
             const gameResult = determineGameResult(newGame);
             set({ gameResult });
@@ -158,12 +152,12 @@ export const useGameStore = create<GameStore>()(
         difficulty: state.difficulty,
         theme: state.theme,
         playerColor: state.playerColor,
-        moveHistory: state.moveHistory, // Add move history to persisted state
-        timeWhite: state.timeWhite, // Add time to persisted state
-        timeBlack: state.timeBlack  // Add time to persisted state
+        moveHistory: state.moveHistory,
+        timeWhite: state.timeWhite, 
+        timeBlack: state.timeBlack 
       }),
       merge: (persistedState, currentState) => {
-        // Recreate the game from the move history when hydrating
+
         const game = createNewGame();
         const moveHistory = (persistedState as any).moveHistory || [];
         
@@ -215,10 +209,8 @@ const determineGameResult = (game: Chess): GameResult => {
 const calculateDrawAcceptProbability = (evaluation: number, difficulty: Difficulty): number => {
   const absEval = Math.abs(evaluation);
   
-  // Base probability depends on how even the position is
   let baseProbability = Math.max(0, 1 - absEval / 2);
-  
-  // Adjust based on difficulty
+ 
   switch (difficulty) {
     case 'easy':
       return Math.min(1, baseProbability + 0.3);

@@ -3,10 +3,10 @@ import { Difficulty } from '../types/chess';
 
 const pieceValues = {
   p: 100,
-  n: 320,
-  b: 330,
+  n: 325,
+  b: 335,
   r: 500,
-  q: 950,
+  q: 975,
   k: 20000,
 };
 
@@ -145,27 +145,27 @@ const pst: Record<string, { mg: number[], eg: number[] }> = {
   }
 };
 
-// Enhanced opening book with more variations
 const openingBook: Record<string, string[]> = {
-  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -': ['e2e4', 'd2d4', 'g1f3', 'c2c4'],
-  'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -': ['e7e5', 'c7c5', 'e7e6', 'c7c6'],
-  'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['g1f3', 'f1c4', 'f2f4'],
-  'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq -': ['b8c6', 'g8f6', 'd7d5'],
-  'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['f1b5', 'd2d4', 'b1c3'],
-  'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq -': ['a7a6', 'g8f6', 'd7d6'],
-  'r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq -': ['b5c6', 'b5a4', 'e1g1'],
-  'r1bqkbnr/1ppp1ppp/p1B5/4p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq -': ['d7c6', 'b7c6'],
-  'rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['d2d4', 'f1c4', 'b1c3'],
-  'rnbqkbnr/ppp2ppp/3p4/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq -': ['e5d4', 'g8f6'],
-  'rnbqkb1r/ppp2ppp/3p1n2/4p3/3PP3/5N2/PPP2PPP/RNBQKB1R w KQkq -': ['e4e5', 'b1c3', 'f1d3'],
-  'rnbqkb1r/ppp2ppp/3p1n2/4P3/3P4/5N2/PPP2PPP/RNBQKB1R b KQkq -': ['f6d5', 'f6g4', 'd6e5'],
-  'rnbqkb1r/ppp2ppp/5n2/4p3/3P4/5N2/PPP2PPP/RNBQKB1R w KQkq -': ['c2c4', 'f1e2', 'b1c3'],
-  'rnbqkb1r/ppp2ppp/5n2/4p3/2PP4/5N2/PP3PPP/RNBQKB1R b KQkq -': ['e5d4', 'c7c6', 'b8c6'],
-  'rnbqkb1r/ppp2ppp/8/4p3/2Pn4/5N2/PP3PPP/RNBQKB1R w KQkq -': ['f3d4', 'd1d4', 'b1c3'],
-  'rnbqkb1r/ppp2ppp/8/4N3/2Pn4/8/PP3PPP/RNBQKB1R b KQkq -': ['d8e7', 'd8d5', 'd4c2'],
-  'rnbqkb1r/ppp2ppp/8/4N3/2P5/8/PP3PPP/RNBQKB1R b KQkq -': ['d4c2', 'd4b3'],
+  'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq -': ['e2e4', 'd2d4', 'g1f3', 'c2c4', 'b2b3', 'g2g3'],
+  'rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq -': ['e7e5', 'c7c5', 'e7e6', 'c7c6', 'd7d5', 'g8f6', 'd7d6', 'b7b6'],
+  'rnbqkbnr/pppp1ppp/8/4p3/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['g1f3', 'f1c4', 'f2f4', 'b1c3', 'd2d4'],
+  'rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq -': ['b8c6', 'g8f6', 'd7d6', 'f7f5'],
+  'r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['f1b5', 'd2d4', 'f1c4', 'b1c3', 'c2c3', 'd2d3'],
+  'r1bqkbnr/pppp1ppp/2n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R b KQkq -': ['a7a6', 'g8f6', 'd7d6', 'f7f5', 'g8e7'],
+  'r1bqkbnr/1ppp1ppp/p1n5/1B2p3/4P3/5N2/PPPP1PPP/RNBQK2R w KQkq -': ['b5a4', 'b5c6', 'e1g1', 'c2c3', 'd2d4'],
+  'r1bqkbnr/1ppp1ppp/p1n5/4p3/B3P3/5N2/PPPP1PPP/RNBQK2R b KQkq -': ['b7b5', 'd7d6', 'g8f6', 'f7f5'],
+  'r1bqkbnr/pppp1ppp/2n5/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R b KQkq -': ['g8f6', 'f8c5', 'f7f5', 'd7d6', 'b8a6'],
+  'r1bqkb1r/pppp1ppp/2n2n2/4p3/2B1P3/5N2/PPPP1PPP/RNBQK2R w KQkq -': ['d2d4', 'd2d3', 'b1c3', 'e1g1', 'c2c3'],
+  'rnbqkbnr/pp1ppppp/8/2p5/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['g1f3', 'b1c3', 'c2c3', 'd2d4', 'f2f4', 'c2c4'],
+  'rnbqkbnr/pp1ppppp/8/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq -': ['d7d6', 'b8c6', 'e7e6', 'a7a6', 'g8f6'],
+  'rnbqkbnr/pp2pppp/3p4/2p5/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq -': ['d2d4', 'c2c4', 'f1c4', 'b1c3', 'c2c3'],
+  'rnbqkbnr/pp2pppp/3p4/2p5/3PP3/5N2/PPP2PPP/RNBQKB1R b KQkq -': ['c5d4', 'g8f6', 'e7e5', 'g7g6'],
+  'rnbqkbnr/ppp2ppp/4p3/3p4/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['e4d5', 'e4e5', 'd2d4', 'b1c3', 'g1f3'],
+  'rnbqkbnr/ppp2ppp/4p3/3pP3/8/8/PPPP1PPP/RNBQKBNR b KQkq -': ['d5d4', 'c7c5', 'f7f6', 'f7f5'],
+  'rnbqkbnr/ppp2ppp/4p3/3p4/3PP3/8/PPP2PPP/RNBQKBNR b KQkq -': ['d5e4', 'f8e7', 'c7c5', 'b8c6', 'g8f6'],
+  'rnbqkbnr/pp1ppppp/2p5/8/4P3/8/PPPP1PPP/RNBQKBNR w KQkq -': ['d2d4', 'b1c3', 'g1f3', 'c2c4', 'd2d3'],
+  'rnbqkbnr/pp1ppppp/2p5/8/3PP3/8/PPP2PPP/RNBQKBNR b KQkq -': ['d7d5', 'g7g6', 'e7e6', 'd7d6']
 };
-
 
 const MATE_UPPER = pieceValues.k + 10 * pieceValues.q;
 
@@ -176,8 +176,7 @@ export const evaluateBoard = (game: Chess): number => {
   if (game.isDraw() || game.isStalemate()) {
     return 0;
   }
-  
-  // Determine game phase (simplified approach)
+
   const board = game.board();
   let totalPieces = 0;
   for (let i = 0; i < 8; i++) {
@@ -185,33 +184,29 @@ export const evaluateBoard = (game: Chess): number => {
       if (board[i][j]) totalPieces++;
     }
   }
-  
-  // Phase calculation (32 pieces at start, fewer than 10 can be considered endgame)
-  // 1.0 = middlegame, 0.0 = endgame
+
   const phase = Math.min(1.0, Math.max(0.0, (totalPieces - 10) / 22));
-  
+
   let score = 0;
   for (let i = 0; i < 8; i++) {
     for (let j = 0; j < 8; j++) {
       const piece = board[i][j];
       if (!piece) continue;
-      
+
       const materialValue = pieceValues[piece.type];
       const squareIndex = (7 - i) * 8 + j;
-      
-      // For black pieces, mirror the square index vertically
+
       const adjustedSquareIndex = piece.color === 'w' ? squareIndex : 63 - squareIndex;
-      
-      // Blend between middlegame and endgame values based on the phase
-      const positionValue = 
-        phase * pst[piece.type].mg[adjustedSquareIndex] + 
+
+      const positionValue =
+        phase * pst[piece.type].mg[adjustedSquareIndex] +
         (1 - phase) * pst[piece.type].eg[adjustedSquareIndex];
-      
+
       const value = materialValue + positionValue;
       score += piece.color === 'w' ? value : -value;
     }
   }
-  
+
   return score;
 };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Chessboard } from './components/Chessboard';
 import { Sidebar } from './components/Sidebar';
 import { useGameStore } from './store/gameStore';
