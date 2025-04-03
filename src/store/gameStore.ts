@@ -1,10 +1,16 @@
 import { create } from 'zustand';
 import { Chess } from 'chess.js';
 import { calculateBestMove, evaluateBoard } from '../utils/engine';
-import { GameStore, GameMode, Difficulty, GameResult, Theme } from '../types/chess';
+import { GameStore, GameMode, Difficulty, GameResult, Theme, TimeControl } from '../types/chess';
 import { persist } from 'zustand/middleware';
 
-const INITIAL_TIME = 600;
+const TIME_CONTROLS = {
+  bullet: { name: 'Bullet', time: 60 },
+  blitz: { name: 'Blitz', time: 300 },
+  rapid: { name: 'Rapid', time: 600 },
+  classical: { name: 'Classical', time: 1800 },
+  custom: { name: 'Custom', time: 600 }
+};
 
 const createNewGame = () => new Chess();
 
@@ -16,8 +22,9 @@ export const useGameStore = create<GameStore>()(
       difficulty: 'medium',
       theme: 'light',
       moveHistory: [],
-      timeWhite: INITIAL_TIME,
-      timeBlack: INITIAL_TIME,
+      timeControl: 'rapid',
+      timeWhite: TIME_CONTROLS.rapid.time,
+      timeBlack: TIME_CONTROLS.rapid.time,
       isThinking: false,
       gameResult: null,
       playerColor: 'w',
@@ -26,6 +33,16 @@ export const useGameStore = create<GameStore>()(
       setDifficulty: (difficulty: Difficulty) => set({ difficulty }),
       setTheme: (theme: Theme) => set({ theme }),
       setPlayerColor: (color: 'w' | 'b') => set({ playerColor: color }),
+      setTimeControl: (timeControl: TimeControl) => set({ 
+        timeControl,
+        timeWhite: TIME_CONTROLS[timeControl].time,
+        timeBlack: TIME_CONTROLS[timeControl].time
+      }),
+      setCustomTimeControl: (minutes: number) => set({
+        timeControl: 'custom',
+        timeWhite: minutes * 60,
+        timeBlack: minutes * 60
+      }),
 
       makeMove: async (move) => {
         const { game, mode, playerColor, moveHistory } = get();
@@ -100,14 +117,17 @@ export const useGameStore = create<GameStore>()(
         });
       },
 
-      resetGame: () => set({
-        game: createNewGame(),
-        moveHistory: [],
-        timeWhite: INITIAL_TIME,
-        timeBlack: INITIAL_TIME,
-        gameResult: null,
-        isThinking: false
-      }),
+      resetGame: () => {
+        const { timeControl } = get();
+        set({
+          game: createNewGame(),
+          moveHistory: [],
+          timeWhite: TIME_CONTROLS[timeControl].time,
+          timeBlack: TIME_CONTROLS[timeControl].time,
+          gameResult: null,
+          isThinking: false
+        });
+      },
 
       updateTime: (color, time) => {
         if (get().gameResult) return;
@@ -153,6 +173,7 @@ export const useGameStore = create<GameStore>()(
         theme: state.theme,
         playerColor: state.playerColor,
         moveHistory: state.moveHistory,
+        timeControl: state.timeControl,
         timeWhite: state.timeWhite, 
         timeBlack: state.timeBlack 
       }),

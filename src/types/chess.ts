@@ -36,3 +36,26 @@ export interface GameStore extends GameState {
   offerDraw: () => boolean;
   resign: (color: 'w' | 'b') => void;
 }
+export type TimeControl = 'bullet' | 'blitz' | 'rapid' | 'classical' | 'custom';
+
+export interface GameStore {
+  game: Chess;
+  mode: GameMode;
+  difficulty: Difficulty;
+  theme: Theme;
+  moveHistory: string[];
+  timeControl: TimeControl;
+  timeWhite: number;
+  timeBlack: number;
+  isThinking: boolean;
+  setCustomTimeControl: (minutes: number) => void;
+  gameResult: GameResult | null;
+  playerColor: 'w' | 'b';
+  
+  setMode: (mode: GameMode) => void;
+  setDifficulty: (difficulty: Difficulty) => void;
+  setTheme: (theme: Theme) => void;
+  setPlayerColor: (color: 'w' | 'b') => void;
+  setTimeControl: (timeControl: TimeControl) => void;  // Add this line
+  // ...existing methods...
+}
