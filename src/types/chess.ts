@@ -51,6 +51,9 @@ export interface GameStore {
   setCustomTimeControl: (minutes: number) => void;
   gameResult: GameResult | null;
   playerColor: 'w' | 'b';
+  message: string | null;
+  messageTimeout: NodeJS.Timeout | null;
+  setMessage: (message: string | null) => void;
   
   setMode: (mode: GameMode) => void;
   setDifficulty: (difficulty: Difficulty) => void;

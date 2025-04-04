@@ -12,6 +12,9 @@ function App() {
     setShowSetup(false);
   };
 
+  const { message} = useGameStore();
+
+
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'} transition-colors duration-300`}>
       <div className="container mx-auto py-8">
@@ -39,6 +42,21 @@ function App() {
           </div>
         )}
       </div>
+ 
+      {message && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+          <div className={`
+            px-6 py-4 
+            rounded-lg shadow-lg 
+            text-lg font-medium text-white
+            ${message.includes('accepted') ? 'bg-green-600' : 'bg-red-600'} 
+            opacity-90 
+            animate-fadeIn
+          `}>
+            {message}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

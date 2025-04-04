@@ -28,6 +28,8 @@ export const useGameStore = create<GameStore>()(
       isThinking: false,
       gameResult: null,
       playerColor: 'w',
+      message: null,
+      messageTimeout: null,
 
       setMode: (mode: GameMode) => set({ mode, gameResult: null }),
       setDifficulty: (difficulty: Difficulty) => set({ difficulty }),
@@ -136,6 +138,20 @@ export const useGameStore = create<GameStore>()(
 
       setThinking: (thinking) => set({ isThinking: thinking }),
       
+      setMessage: (message) => {
+        const { messageTimeout } = get();
+
+        if (messageTimeout) {
+          clearTimeout(messageTimeout);
+        }
+
+        const timeout = setTimeout(() => {
+          set({ message: null, messageTimeout: null });
+        }, 3000);
+        
+        set({ message, messageTimeout: timeout });
+      },
+      
       offerDraw: () => {
         const { game, mode, difficulty } = get();
         
@@ -147,9 +163,12 @@ export const useGameStore = create<GameStore>()(
           
           if (Math.random() < acceptProbability) {
             set({ gameResult: { winner: null, reason: 'agreement' } });
+            get().setMessage("Draw offer accepted!");
             return true;
+          } else {
+            get().setMessage("Draw offer declined!");
+            return false;
           }
-          return false;
         }
         
         return false;
@@ -228,15 +247,19 @@ const determineGameResult = (game: Chess): GameResult => {
 };
 
 const calculateDrawAcceptProbability = (evaluation: number, difficulty: Difficulty): number => {
-  const absEval = Math.abs(evaluation);
+  const evalFromEnginePerspective = -evaluation;
+
+  if (evalFromEnginePerspective > 0.2) {
+    return 0;
+  }
   
-  let baseProbability = Math.max(0, 1 - absEval / 2);
- 
+  let baseProbability = Math.max(0, Math.min(1, -evalFromEnginePerspective / 2 + 0.5));
+  
   switch (difficulty) {
     case 'easy':
       return Math.min(1, baseProbability + 0.3);
     case 'medium':
-      return baseProbability;
+      return Math.max(0, baseProbability - 0.2);
     default:
       return baseProbability;
   }

@@ -26,7 +26,7 @@ export const Sidebar: React.FC = () => {
     updateTime
   } = useGameStore();
 
-  const timerRef = useRef<number | null>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (timerRef.current) {
