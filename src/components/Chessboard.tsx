@@ -24,6 +24,9 @@ export const Chessboard: React.FC = () => {
     w: { p: 0, n: 0, b: 0, r: 0, q: 0 },
     b: { p: 0, n: 0, b: 0, r: 0, q: 0 }
   });
+  // Add state for the selected piece and its legal moves
+  const [selectedPiece, setSelectedPiece] = useState<Square | null>(null);
+  const [legalMoves, setLegalMoves] = useState<Square[]>([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -78,7 +81,43 @@ export const Chessboard: React.FC = () => {
     };
     
     calculateCapturedPieces();
+ 
+    setSelectedPiece(null);
+    setLegalMoves([]);
   }, [game]);
+
+  const onSquareClick = (square: Square) => {
+    if (gameResult || isThinking) return;
+
+    if (mode === 'single' && game.turn() !== playerColor) return;
+
+    const piece = game.get(square);
+   
+    if (selectedPiece) {
+
+      if (legalMoves.includes(square)) {
+        const isPromotion = 
+          game.get(selectedPiece)?.type === 'p' && 
+          ((game.get(selectedPiece)?.color === 'w' && square.charAt(1) === '8') || 
+           (game.get(selectedPiece)?.color === 'b' && square.charAt(1) === '1'));
+
+        const promotion = isPromotion ? 'q' : undefined;
+
+        makeMove({ from: selectedPiece, to: square, promotion });
+      }
+ 
+      setSelectedPiece(null);
+      setLegalMoves([]);
+      return;
+    }
+    
+    if (piece && piece.color === game.turn()) {
+      setSelectedPiece(square);
+
+      const moves = game.moves({ square, verbose: true });
+      setLegalMoves(moves.map(move => move.to));
+    }
+  };
 
   const onDrop = useCallback(
     (sourceSquare: Square, targetSquare: Square) => {
@@ -204,6 +243,33 @@ export const Chessboard: React.FC = () => {
 
   const capturedPiecesWidth = Math.max(40, boardSize * 0.1);
 
+  const customSquareStyles: Record<string, Record<string, string | number>> = {};
+
+  legalMoves.forEach((square) => {
+    const targetPiece = game.get(square);
+   
+    if (targetPiece) {
+
+      customSquareStyles[square] = {
+        background: 'radial-gradient(transparent 0%, transparent 79%, rgba(255,0,0,0.3) 80%)',
+        borderRadius: '50%'
+      };
+    } else {
+  
+      customSquareStyles[square] = {
+        background: 'radial-gradient(rgba(0,0,0,0.1) 25%, rgba(0,0,0,0) 26%)',
+        borderRadius: '50%'
+      };
+    }
+  });
+  
+
+  if (selectedPiece) {
+    customSquareStyles[selectedPiece] = {
+      background: 'rgba(255, 255, 0, 0.4)'
+    };
+  }
+
   return (
     <div className="flex flex-col lg:flex-row items-center justify-center p-2 gap-2">
       <div className={`lg:hidden w-full max-w-[${boardSize}px] h-[${capturedPiecesWidth}px] bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-500 p-2 rounded-md flex flex-row items-center justify-center gap-1 overflow-x-auto`}>
@@ -241,12 +307,14 @@ export const Chessboard: React.FC = () => {
           <ReactChessboard
             position={game.fen()}
             onPieceDrop={onDrop}
+            onSquareClick={onSquareClick}
             boardOrientation={boardOrientation}
             boardWidth={boardSize}
             customBoardStyle={{
               borderRadius: '4px',
               boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
             }}
+            customSquareStyles={customSquareStyles}
             customDarkSquareStyle={{ backgroundColor: theme === 'dark' ? '#1e293b' : '#b7c0d8' }}
             customLightSquareStyle={{ backgroundColor: theme === 'dark' ? '#334155' : '#e2e8f0' }}
           />
