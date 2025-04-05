@@ -1,23 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Chessboard } from './components/Chessboard';
 import { Sidebar } from './components/Sidebar';
 import { TimeControlSelector } from './components/TimeControlSelector';
 import { useGameStore } from './store/gameStore';
+import { Menu, X } from 'lucide-react';
 
 function App() {
   const theme = useGameStore((state) => state.theme);
   const [showSetup, setShowSetup] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const { message } = useGameStore();
 
   const handleStartGame = () => {
     setShowSetup(false);
   };
 
-  const { message} = useGameStore();
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
 
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <div className={`min-h-screen ${theme === 'dark' ? 'bg-slate-900' : 'bg-slate-100'} transition-colors duration-300`}>
-      <div className="container mx-auto py-8">
+      {!showSetup && isMobile && (
+        <div className={`lg:hidden fixed top-0 left-0 right-0 z-40 ${
+          theme === 'dark' ? 'bg-slate-800' : 'bg-white'
+        } shadow-md p-4 flex justify-between items-center`}>
+          <h1 className="text-xl font-bold">Chess-Me</h1>
+          <button
+            onClick={() => setShowSidebar(!showSidebar)}
+            className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-slate-700"
+          >
+            {showSidebar ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
+      )}
+
+      <div className={`container mx-auto py-8 ${!showSetup && isMobile ? 'pt-20' : ''}`}>
         {showSetup ? (
           <div className="max-w-3xl mx-auto">
             <h1 className="text-3xl font-bold text-center mb-8">Chess Game Setup</h1>
@@ -36,9 +62,21 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="flex gap-8 items-start justify-center">
-            <Chessboard />
-            <Sidebar />
+          <div className="flex flex-col lg:flex-row gap-8 items-start justify-center">
+            <div className={`w-full ${isMobile ? 'order-2' : ''}`}>
+              <Chessboard />
+            </div>
+
+            <div className={`
+              ${isMobile ? 
+                `fixed top-16 right-0 bottom-0 z-30 w-72 p-4 overflow-y-auto transition-transform duration-300 ease-in-out ${
+                  theme === 'dark' ? 'bg-slate-800' : 'bg-white'
+                } shadow-xl ${showSidebar ? 'translate-x-0' : 'translate-x-full'}` 
+                : 'w-80 relative'} 
+              ${isMobile ? '' : 'lg:block'}
+            `}>
+              <Sidebar />
+            </div>
           </div>
         )}
       </div>
@@ -56,6 +94,12 @@ function App() {
             {message}
           </div>
         </div>
+      )}
+      {showSidebar && isMobile && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-20 lg:hidden"
+          onClick={() => setShowSidebar(false)}
+        />
       )}
     </div>
   );
