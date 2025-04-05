@@ -19,10 +19,24 @@ export const Chessboard: React.FC = () => {
     playerColor
   } = useGameStore();
   
+  const [boardSize, setBoardSize] = useState(600);
   const [capturedPieces, setCapturedPieces] = useState<CapturedPieces>({
     w: { p: 0, n: 0, b: 0, r: 0, q: 0 },
     b: { p: 0, n: 0, b: 0, r: 0, q: 0 }
   });
+
+  useEffect(() => {
+    const handleResize = () => {
+      const maxWidth = window.innerWidth * 0.8;
+      const maxHeight = window.innerHeight * 0.8;
+      const size = Math.min(maxWidth, maxHeight, 600);
+      setBoardSize(size);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const calculateCapturedPieces = () => {
@@ -123,6 +137,9 @@ export const Chessboard: React.FC = () => {
       q: 9
     };
 
+    const pieceSize = Math.max(16, boardSize * 0.04);
+    const pieceMargin = Math.max(2, boardSize * 0.005);
+
     const pieces = [];
     for (let i = 0; i < count; i++) {
       pieces.push(
@@ -137,10 +154,10 @@ export const Chessboard: React.FC = () => {
             transform hover:scale-110 transition-transform
           `}
           style={{
-            width: `${Math.min(28 + pieceValues[type as keyof typeof pieceValues] * 2, 40)}px`,
-            height: `${Math.min(28 + pieceValues[type as keyof typeof pieceValues] * 2, 40)}px`,
-            fontSize: `${Math.min(16 + pieceValues[type as keyof typeof pieceValues], 24)}px`,
-            margin: '2px',
+            width: `${pieceSize}px`,
+            height: `${pieceSize}px`,
+            fontSize: `${pieceSize * 0.7}px`,
+            margin: `${pieceMargin}px`,
             textShadow: color === 'w' ? '0 0 1px #000' : '0 0 1px #fff'
           }}
           title={`${color === 'w' ? 'White' : 'Black'} ${
@@ -185,11 +202,13 @@ export const Chessboard: React.FC = () => {
     );
   };
 
+  const capturedPiecesWidth = Math.max(40, boardSize * 0.1);
+
   return (
-    <div className="flex items-center justify-center">
-      <div className="h-[600px] w-[80px] bg-gradient-to-b from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-500 p-2 mr-2 rounded-md flex flex-col items-center justify-start gap-1 overflow-y-auto">
-        <div className="text-sm font-semibold mb-2 text-center text-slate-600 dark:text-slate-300">
-          Captured White
+    <div className="flex flex-col lg:flex-row items-center justify-center p-2 gap-2">
+      <div className={`lg:hidden w-full max-w-[${boardSize}px] h-[${capturedPiecesWidth}px] bg-gradient-to-r from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-500 p-2 rounded-md flex flex-row items-center justify-center gap-1 overflow-x-auto`}>
+        <div className="text-sm font-semibold mr-2 text-center text-slate-600 dark:text-slate-300">
+          White
         </div>
         {renderPiece('q', 'w', capturedPieces.w.q)}
         {renderPiece('r', 'w', capturedPieces.w.r)}
@@ -197,57 +216,87 @@ export const Chessboard: React.FC = () => {
         {renderPiece('n', 'w', capturedPieces.w.n)}
         {renderPiece('p', 'w', capturedPieces.w.p)}
         {Object.values(capturedPieces.w).every(count => count === 0) && (
-          <span className="text-slate-600 dark:text-slate-300 italic text-xs text-center mt-4">None</span>
+          <span className="text-slate-600 dark:text-slate-300 italic text-xs text-center">None</span>
         )}
-        <div className="mt-auto">
-          {calculateAdvantage()}
+      </div>
+
+      <div className="flex flex-row items-center justify-center gap-2">
+        <div className={`hidden lg:flex h-[${boardSize}px] w-[${capturedPiecesWidth}px] bg-gradient-to-b from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-500 p-2 rounded-md flex-col items-center justify-start gap-1 overflow-y-auto`}>
+          <div className="text-sm font-semibold mb-2 text-center text-slate-600 dark:text-slate-300">
+            Captured White
+          </div>
+          {renderPiece('q', 'w', capturedPieces.w.q)}
+          {renderPiece('r', 'w', capturedPieces.w.r)}
+          {renderPiece('b', 'w', capturedPieces.w.b)}
+          {renderPiece('n', 'w', capturedPieces.w.n)}
+          {renderPiece('p', 'w', capturedPieces.w.p)}
+          {Object.values(capturedPieces.w).every(count => count === 0) && (
+            <span className="text-slate-600 dark:text-slate-300 italic text-xs text-center mt-4">None</span>
+          )}
+          <div className="mt-auto">
+            {calculateAdvantage()}
+          </div>
+        </div>
+        <div className={`w-[${boardSize}px] h-[${boardSize}px] relative`}>
+          <ReactChessboard
+            position={game.fen()}
+            onPieceDrop={onDrop}
+            boardOrientation={boardOrientation}
+            boardWidth={boardSize}
+            customBoardStyle={{
+              borderRadius: '4px',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
+            }}
+            customDarkSquareStyle={{ backgroundColor: theme === 'dark' ? '#1e293b' : '#b7c0d8' }}
+            customLightSquareStyle={{ backgroundColor: theme === 'dark' ? '#334155' : '#e2e8f0' }}
+          />
+          {isThinking && (
+            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+              <div className="text-white text-xl font-semibold">Thinking...</div>
+            </div>
+          )}
+          {gameResult && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg text-center max-w-xs">
+                <h3 className="text-2xl font-bold mb-2 text-blue-600 dark:text-blue-400">
+                  {gameResult.winner === 'w' ? 'White' : gameResult.winner === 'b' ? 'Black' : 'Nobody'} wins by {gameResult.reason}
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300 mb-4">
+                  {gameResult.reason === 'checkmate' ? 'The king is in check and has no legal moves.' : 
+                   gameResult.reason === 'stalemate' ? 'No legal moves available, but the king is not in check.' : 
+                   gameResult.reason === 'resignation' ? 'Player resigned the game.' :
+                   gameResult.reason === 'agreement' ? 'Draw agreed by both players.' :
+                   'Game ended in a draw.'}
+                </p>
+                <button 
+                  className="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors"
+                  onClick={() => useGameStore.getState().resetGame()}
+                >
+                  New Game
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className={`hidden lg:flex h-[${boardSize}px] w-[${capturedPiecesWidth}px] bg-gradient-to-b from-slate-700 to-slate-600 p-2 rounded-md flex-col items-center justify-start gap-1 overflow-y-auto`}>
+          <div className="text-sm font-semibold mb-2 text-center text-slate-300">
+            Captured Black
+          </div>
+          {renderPiece('q', 'b', capturedPieces.b.q)}
+          {renderPiece('r', 'b', capturedPieces.b.r)}
+          {renderPiece('b', 'b', capturedPieces.b.b)}
+          {renderPiece('n', 'b', capturedPieces.b.n)}
+          {renderPiece('p', 'b', capturedPieces.b.p)}
+          {Object.values(capturedPieces.b).every(count => count === 0) && (
+            <span className="text-slate-300 italic text-xs text-center mt-4">None</span>
+          )}
         </div>
       </div>
 
-      <div className="w-[600px] h-[600px] relative">
-        <ReactChessboard
-          position={game.fen()}
-          onPieceDrop={onDrop}
-          boardOrientation={boardOrientation}
-          customBoardStyle={{
-            borderRadius: '4px',
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)',
-          }}
-          customDarkSquareStyle={{ backgroundColor: theme === 'dark' ? '#1e293b' : '#b7c0d8' }}
-          customLightSquareStyle={{ backgroundColor: theme === 'dark' ? '#334155' : '#e2e8f0' }}
-        />
-        {isThinking && (
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-            <div className="text-white text-xl font-semibold">Thinking...</div>
-          </div>
-        )}
-        {gameResult && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg text-center max-w-xs">
-              <h3 className="text-2xl font-bold mb-2 text-blue-600 dark:text-blue-400">
-                {gameResult.winner === 'w' ? 'White' : gameResult.winner === 'b' ? 'Black' : 'Nobody'} wins by {gameResult.reason}
-              </h3>
-              <p className="text-gray-700 dark:text-gray-300 mb-4">
-                {gameResult.reason === 'checkmate' ? 'The king is in check and has no legal moves.' : 
-                 gameResult.reason === 'stalemate' ? 'No legal moves available, but the king is not in check.' : 
-                 gameResult.reason === 'resignation' ? 'Player resigned the game.' :
-                 gameResult.reason === 'agreement' ? 'Draw agreed by both players.' :
-                 'Game ended in a draw.'}
-              </p>
-              <button 
-                className="px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 transition-colors"
-                onClick={() => useGameStore.getState().resetGame()}
-              >
-                New Game
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      <div className="h-[600px] w-[80px] bg-gradient-to-b from-slate-700 to-slate-600 p-2 ml-2 rounded-md flex flex-col items-center justify-start gap-1 overflow-y-auto">
-        <div className="text-sm font-semibold mb-2 text-center text-slate-300">
-          Captured Black
+      <div className={`lg:hidden w-full max-w-[${boardSize}px] h-[${capturedPiecesWidth}px] bg-gradient-to-r from-slate-700 to-slate-600 p-2 rounded-md flex flex-row items-center justify-center gap-1 overflow-x-auto`}>
+        <div className="text-sm font-semibold mr-2 text-center text-slate-300">
+          Black
         </div>
         {renderPiece('q', 'b', capturedPieces.b.q)}
         {renderPiece('r', 'b', capturedPieces.b.r)}
@@ -255,8 +304,12 @@ export const Chessboard: React.FC = () => {
         {renderPiece('n', 'b', capturedPieces.b.n)}
         {renderPiece('p', 'b', capturedPieces.b.p)}
         {Object.values(capturedPieces.b).every(count => count === 0) && (
-          <span className="text-slate-300 italic text-xs text-center mt-4">None</span>
+          <span className="text-slate-300 italic text-xs text-center">None</span>
         )}
+      </div>
+
+      <div className="lg:hidden">
+        {calculateAdvantage()}
       </div>
     </div>
   );
