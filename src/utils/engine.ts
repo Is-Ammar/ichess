@@ -262,8 +262,8 @@ export const calculateBestMove = async (fen: string, difficulty: Difficulty): Pr
       }
     }
   }
-  const searchDepth = difficulty === 'easy' ? 2 : difficulty === 'medium' ? 5 : 4;
-  const delay = difficulty === 'easy' ? 100 : difficulty === 'medium' ? 300 : 500;
+  const searchDepth = difficulty === 'easy' ? 2 : difficulty === 'medium' ? 4 : 4;
+  const delay = difficulty === 'easy' ? 100 : difficulty === 'medium' ? 400 : 500;
   await new Promise(resolve => setTimeout(resolve, delay));
   let bestMove = null;
   let bestEval = game.turn() === 'w' ? -Infinity : Infinity;
